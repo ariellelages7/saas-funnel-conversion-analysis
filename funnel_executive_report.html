@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaaS Conversion Funnel Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green:#1D9E75; --blue:#378ADD; --amber:#EF9F27;
+    --red:#E24B4A;   --gray:#888780;
+    --bg:#fafaf8; --surface:#ffffff; --surface2:#f4f3ef;
+    --text:#1a1a18; --text2:#555550; --text3:#888880;
+    --border:rgba(0,0,0,.08);
+  }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  .page { max-width:960px; margin:0 auto; padding:3rem 2rem 5rem; }
+
+  .cover { border-left:4px solid var(--blue); padding:0 0 2.5rem 2rem; margin-bottom:3rem; }
+  .cover-eyebrow { font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--blue); font-weight:500; margin-bottom:.6rem; }
+  .cover-title { font-family:'Syne',sans-serif; font-size:34px; font-weight:700; line-height:1.1; margin-bottom:.5rem; }
+  .cover-sub { font-size:15px; color:var(--text2); font-weight:300; }
+
+  .section { margin-bottom:3rem; }
+  .sec-label { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--text3); margin-bottom:1.25rem; padding-bottom:.5rem; border-bottom:1px solid var(--border); }
+
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:2.5rem; }
+  .kpi { background:var(--surface2); border-radius:10px; padding:1.1rem 1.25rem; }
+  .kpi-label { font-size:11px; color:var(--text3); margin-bottom:.3rem; }
+  .kpi-val { font-size:24px; font-weight:500; line-height:1.1; }
+  .kpi-sub { font-size:11px; color:var(--text2); margin-top:.3rem; }
+  .danger { color:var(--red); } .good { color:var(--green); }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.4rem 1.5rem; }
+  .card-title { font-size:12px; color:var(--text2); font-weight:500; margin-bottom:1rem; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem; }
+  .chart-wrap { position:relative; width:100%; }
+
+  .funnel-stage { display:flex; align-items:center; gap:12px; margin-bottom:5px; }
+  .funnel-label { font-size:11px; color:var(--text2); width:100px; flex-shrink:0; text-align:right; }
+  .funnel-track { flex:1; height:34px; background:var(--surface2); border-radius:8px; overflow:hidden; }
+  .funnel-fill { height:100%; border-radius:8px; display:flex; align-items:center; padding-left:12px; }
+  .funnel-fill span { font-size:11px; font-weight:500; color:white; }
+  .funnel-meta { font-size:11px; width:120px; flex-shrink:0; }
+
+  .bench-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .bench-name { font-size:11px; color:var(--text2); width:165px; flex-shrink:0; }
+  .bench-track { flex:1; height:20px; background:var(--surface2); border-radius:4px; position:relative; overflow:visible; }
+  .bench-fill { height:20px; border-radius:4px; display:flex; align-items:center; padding-left:8px; }
+  .bench-fill span { font-size:10px; font-weight:500; }
+  .bench-marker { position:absolute; top:2px; width:2px; height:16px; background:#555; border-radius:1px; }
+  .bench-val { font-size:11px; width:130px; flex-shrink:0; font-weight:500; }
+
+  .insight { border-left:3px solid var(--blue); background:var(--surface2); border-radius:0 10px 10px 0; padding:1rem 1.25rem; margin-bottom:.85rem; }
+  .insight h4 { font-size:13px; font-weight:500; margin-bottom:.3rem; }
+  .insight p { font-size:13px; color:var(--text2); line-height:1.65; }
+
+  .sim-wrap { display:flex; flex-direction:column; gap:12px; }
+  .sim-row { display:flex; align-items:center; gap:12px; }
+  .sim-label { font-size:12px; color:var(--text2); width:160px; flex-shrink:0; }
+  .sim-val { font-size:12px; font-weight:500; width:45px; flex-shrink:0; text-align:right; }
+  .sim-result { background:var(--surface2); border-radius:10px; padding:1.1rem 1.25rem; margin-top:1rem; }
+  .sim-result-label { font-size:11px; color:var(--text3); margin-bottom:.25rem; }
+  .sim-result-val { font-size:28px; font-weight:500; color:var(--green); }
+  .sim-result-sub { font-size:12px; color:var(--text2); margin-top:.3rem; }
+
+  .footer { font-size:11px; color:var(--text3); border-top:1px solid var(--border); padding-top:1.5rem; margin-top:3rem; line-height:2; }
+  input[type=range] { flex:1; accent-color:var(--blue); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="cover-eyebrow">Executive Report · SaaS Product Analytics</div>
+    <div class="cover-title">Conversion Funnel Analysis<br>User Journey & Revenue Leakage</div>
+    <div class="cover-sub">Funnel drop-off &nbsp;·&nbsp; Benchmark comparison &nbsp;·&nbsp; Financial impact simulation &nbsp;·&nbsp; Prioritized recommendations</div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Overview</div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-label">Top of funnel</div><div class="kpi-val">10,000</div><div class="kpi-sub">Homepage visitors</div></div>
+      <div class="kpi"><div class="kpi-label">Bottom of funnel</div><div class="kpi-val">14</div><div class="kpi-sub">Paying customers</div></div>
+      <div class="kpi"><div class="kpi-label">Overall conversion</div><div class="kpi-val danger">0.14%</div><div class="kpi-sub">Benchmark: ~2–3%</div></div>
+      <div class="kpi"><div class="kpi-label">Critical bottleneck</div><div class="kpi-val danger">Checkout</div><div class="kpi-sub">92% drop-off rate</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Conversion funnel — step by step</div>
+    <div id="funnelViz" style="margin-bottom:1.5rem"></div>
+  </div>
+
+  <div class="row2">
+    <div class="card">
+      <div class="card-title">Conversion rate per stage</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="convChart" role="img" aria-label="Conversion rate per stage bar chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Users lost at each transition</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="lostChart" role="img" aria-label="Users lost per transition bar chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Benchmark comparison — our rates vs SaaS industry average</div>
+    <div id="benchViz"></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Revenue leakage — annual uplift per +10pp improvement</div>
+    <div class="chart-wrap" style="height:220px;margin-bottom:1rem"><canvas id="leakChart" role="img" aria-label="Annual revenue uplift per stage improvement"></canvas></div>
+    <div style="font-size:12px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:.85rem 1rem">
+      Assumes $49 avg ticket · 10,000 monthly visitors · isolated +10pp improvement per stage
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Interactive revenue simulator</div>
+    <div class="card">
+      <div class="card-title">Adjust conversion rates to model revenue scenarios</div>
+      <div class="sim-wrap">
+        <div class="sim-row"><div class="sim-label">Product page conv.</div><input type="range" min="1" max="100" value="50" step="1" id="sl1"><div class="sim-val" id="sv1">50%</div></div>
+        <div class="sim-row"><div class="sim-label">Cart conv.</div><input type="range" min="1" max="100" value="30" step="1" id="sl2"><div class="sim-val" id="sv2">30%</div></div>
+        <div class="sim-row"><div class="sim-label">Checkout conv.</div><input type="range" min="1" max="100" value="8" step="1" id="sl3"><div class="sim-val" id="sv3">8%</div></div>
+        <div class="sim-row"><div class="sim-label">Purchase conv.</div><input type="range" min="1" max="100" value="6" step="1" id="sl4"><div class="sim-val" id="sv4">6%</div></div>
+      </div>
+      <div class="sim-result">
+        <div class="sim-result-label">Projected monthly revenue</div>
+        <div class="sim-result-val" id="simRev">$686</div>
+        <div class="sim-result-sub" id="simDelta">Baseline — adjust sliders to model scenarios</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Key insights & prioritized recommendations</div>
+    <div class="insight" style="border-left-color:var(--red)">
+      <h4>Priority 1 — Checkout is bleeding 92% of users (worth $151K/year to fix)</h4>
+      <p>The checkout stage converts only 8% against an industry benchmark of 75%. Root causes typically include unexpected costs, mandatory account creation, or a long form. Recommendation: guest checkout, show total cost earlier, reduce form fields to minimum.</p>
+    </div>
+    <div class="insight" style="border-left-color:var(--amber)">
+      <h4>Priority 2 — Cart abandonment at 70% signals trust or pricing friction</h4>
+      <p>Only 30% of users who add to cart proceed to checkout — well below the 65% benchmark. Recommendation: add social proof at cart, clear returns policy, A/B test a cart summary with savings highlighted.</p>
+    </div>
+    <div class="insight" style="border-left-color:var(--blue)">
+      <h4>Priority 3 — Overall conversion (0.14%) is 10–20x below SaaS benchmark</h4>
+      <p>A healthy SaaS funnel converts 2–3% of visitors. Fixing checkout and cart alone could close most of this gap. Homepage and product page are above benchmark — the problem is concentrated in the bottom half of the funnel.</p>
+    </div>
+    <div class="insight" style="border-left-color:var(--green)">
+      <h4>What's working — top of funnel is above benchmark</h4>
+      <p>Homepage retains 100% to the next step (benchmark: 45%), and product page converts 50% to cart (benchmark: 35%). Top-of-funnel messaging and positioning are strong — investment should focus on fixing the bottom, not rebuilding the top.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    Analysis by: [Your Name] &nbsp;·&nbsp; Dataset: User Funnels (Kaggle) · 17,175 records<br>
+    Benchmarks: Baymard Institute, HubSpot SaaS Conversion Report 2023 &nbsp;·&nbsp; Tools: Python · pandas · Chart.js
+  </div>
+
+</div>
+<script>
+const G='#1D9E75',B='#378ADD',A='#EF9F27',R='#E24B4A',GR='#888780';
+const tc='#888',gc='rgba(0,0,0,.06)';
+const TICKET=49,VISITORS=10000,BASE=14*49;
+
+const stages=['Homepage','Product page','Cart','Checkout','Purchase'];
+const totals=[10000,5000,1500,450,225];
+const convRate=[100,50.3,29.9,8.0,6.2];
+const dropPct=[0,49.7,70.1,92.0,93.8];
+const stageColors=[G,'#5DCAA5',A,R,'#A32D2D'];
+
+const fEl=document.getElementById('funnelViz');
+stages.forEach((name,i)=>{
+  const pct=(totals[i]/totals[0]*100).toFixed(0);
+  const isProb=dropPct[i]>60;
+  fEl.innerHTML+=`<div class="funnel-stage">
+    <div class="funnel-label">${name}</div>
+    <div class="funnel-track"><div class="funnel-fill" style="width:${pct}%;background:${stageColors[i]}"><span>${convRate[i]}% conv.</span></div></div>
+    <div class="funnel-meta" style="color:${isProb?R:tc}">${totals[i].toLocaleString()} users · ${dropPct[i]}% drop</div>
+  </div>`;
+});
+
+new Chart(document.getElementById('convChart'),{type:'bar',data:{labels:stages,datasets:[{data:convRate,backgroundColor:stageColors,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.raw+'%'}}},scales:{x:{ticks:{color:tc,font:{size:9}},grid:{display:false}},y:{max:110,ticks:{color:tc,font:{size:10},callback:v=>v+'%'},grid:{color:gc}}}}});
+
+new Chart(document.getElementById('lostChart'),{type:'bar',data:{labels:['HP→Product','Product→Cart','Cart→Checkout','Checkout→Purchase'],datasets:[{data:[7485,2066,413,22],backgroundColor:[A,A,R,R],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.raw.toLocaleString()+' users'}}},scales:{x:{ticks:{color:tc,font:{size:9}},grid:{display:false}},y:{ticks:{color:tc,font:{size:10},callback:v=>v.toLocaleString()},grid:{color:gc}}}}});
+
+const bSteps=['HP → product','Product → cart','Cart → checkout','Checkout → purchase'];
+const ourR=[100,50.3,29.9,8.0];
+const bmR=[45,35,65,75];
+const bEl=document.getElementById('benchViz');
+bSteps.forEach((name,i)=>{
+  const col=ourR[i]>=bmR[i]?G:R;
+  const diff=(ourR[i]-bmR[i]).toFixed(1);
+  const diffLabel=diff>0?`+${diff}pp above`:`${Math.abs(diff)}pp below`;
+  bEl.innerHTML+=`<div class="bench-row">
+    <div class="bench-name">${name}</div>
+    <div class="bench-track">
+      <div class="bench-fill" style="width:${ourR[i]}%;background:${col}22"><span style="color:${col}">${ourR[i]}%</span></div>
+      <div class="bench-marker" style="left:${bmR[i]}%"></div>
+    </div>
+    <div class="bench-val" style="color:${col}">Benchmark ${bmR[i]}% · ${diffLabel}</div>
+  </div>`;
+});
+
+new Chart(document.getElementById('leakChart'),{type:'bar',data:{labels:['Homepage','Product page','Cart','Checkout'],datasets:[{data:[62328,76440,86436,151116],backgroundColor:[G+'66',G+'99',A+'bb',R],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+Math.round(v.raw).toLocaleString()+'/year'}}},scales:{x:{ticks:{color:tc,font:{size:10}},grid:{display:false}},y:{ticks:{color:tc,font:{size:10},callback:v=>'$'+Math.round(v/1000)+'K'},grid:{color:gc}}}}});
+
+function calcRev(){
+  const r1=+document.getElementById('sl1').value/100;
+  const r2=+document.getElementById('sl2').value/100;
+  const r3=+document.getElementById('sl3').value/100;
+  const r4=+document.getElementById('sl4').value/100;
+  const buyers=Math.round(VISITORS*r1*r2*r3*r4);
+  const rev=buyers*TICKET;
+  const delta=rev-BASE;
+  document.getElementById('simRev').textContent='$'+rev.toLocaleString();
+  const dEl=document.getElementById('simDelta');
+  if(delta===0){dEl.textContent='Baseline — adjust sliders to model scenarios';dEl.style.color='var(--text2)';}
+  else if(delta>0){dEl.textContent='+$'+delta.toLocaleString()+'/mo vs baseline ('+buyers+' buyers)';dEl.style.color=G;}
+  else{dEl.textContent='-$'+Math.abs(delta).toLocaleString()+'/mo vs baseline ('+buyers+' buyers)';dEl.style.color=R;}
+}
+['sl1','sl2','sl3','sl4'].forEach((id,i)=>{
+  document.getElementById(id).addEventListener('input',function(){
+    document.getElementById('sv'+(i+1)).textContent=this.value+'%';
+    calcRev();
+  });
+});
+</script>
+</body>
+</html>
