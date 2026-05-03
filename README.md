@@ -1,4 +1,4 @@
-# SaaS Conversion Funnel Analysis — Revenue Leakage & Prioritized Recommendations
+# SaaS Conversion Funnel Analysis - Revenue Leakage & Prioritized Recommendations
 
 > Identifying where users drop off, quantifying the financial impact of each bottleneck, and delivering prioritized recommendations.  
 > Funnel analysis · Benchmark comparison · Revenue simulation · Product analytics
@@ -14,7 +14,7 @@ This project analyzes a **5-stage SaaS conversion funnel** (17,175 user records)
 - What is the **revenue impact** of each bottleneck in dollar terms?
 - Which stage should be fixed first to maximize ROI?
 
-The project includes an **interactive revenue simulator** — adjust conversion rates per stage and see the monthly revenue impact in real time.
+The project includes an **interactive revenue simulator** - adjust conversion rates per stage and see the monthly revenue impact in real time.
 
 ---
 
